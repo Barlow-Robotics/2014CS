@@ -36,8 +36,8 @@ public class Turf extends IterativeRobot {
     private final int ARM_LIMIT_SWITCH = 2;
     
     private double ARM_SPEED = 0.50;
-    private final double ARM_MOD = 0.80; //Mode 2 for the arm (left trigger down) is ARM_SPEED * ARM_MOD
-    private double SHOOTER_SPEED = 0.5;
+    private final double ARM_MOD = 0.5; //Mode 2 for the arm (left trigger down) is ARM_SPEED * ARM_MOD
+    private double SHOOTER_SPEED = 1.0;
     
     private RobotDrive baseDrive;
     private Victor shooterVictor;
@@ -157,7 +157,6 @@ public class Turf extends IterativeRobot {
         dispMessage(2, 3, "Left Stick: " + Double.toString(joystickLeft.getY()));
         
         //Hat switch micro control
-        
     }
     
     private void grabInput() {
@@ -168,12 +167,12 @@ public class Turf extends IterativeRobot {
     
     private void shooterControl() {
         //Drive the shooter
-        if(joystickRight.getRawButton(LIFT_ARM) && !joystickRight.getRawButton(DROP_ARM)) {
+        if((joystickRight.getRawButton(LIFT_ARM) && !joystickRight.getRawButton(DROP_ARM)) || joystickAlt.getRawButton(10)) {
             //Slow forward drive for the kicker
-            shooterVictor.set(0.25);
+            shooterVictor.set(-0.5);
         } else if(joystickRight.getRawButton(DROP_ARM) && !joystickRight.getRawButton(LIFT_ARM)) {
             //Slow back drive for the kicker
-            shooterVictor.set(-0.25);
+            shooterVictor.set(0.5);
         } else if((joystickAlt.getRawButton(8) && joystickAlt.getRawButton(12)) || (joystickLeft.getRawButton(4) && joystickRight.getRawButton(5))) { //Reg kick
             //Full shoot for the kicker
             shooterVictor.set(getKickSpeed());
