@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -57,6 +58,8 @@ public class Turf extends IterativeRobot {
     private Solenoid closeSolenoid;
     private Compressor compressor;
     
+    private DriverStation ds;
+    
     private boolean liftInterrupt = false; //If the lift has been interrupted by the limit switch
     private Timer timer;
     /**
@@ -83,9 +86,7 @@ public class Turf extends IterativeRobot {
         
         joystickLeft = new Joystick(1);
         joystickRight = new Joystick(2);
-        joystickAlt = new Joystick(3);
-        
-        
+        joystickAlt = new Joystick(3);       
         
         cameraLight = new Relay(2);
         camera = new Camera();
@@ -95,6 +96,8 @@ public class Turf extends IterativeRobot {
         
         SmartDashboard.putNumber("Maximum_Shoot", SHOOTER_SPEED);
         SmartDashboard.putNumber("Maximum_Arm_Speed", ARM_SPEED);
+        
+        ds = DriverStation.getInstance();
         
     }
 
@@ -138,6 +141,22 @@ public class Turf extends IterativeRobot {
         
         SmartDashboard.putBoolean("Limit_Switch", armSwitch.get());
         SmartDashboard.putBoolean("Pressure_Switch_Tripped", compressor.getPressureSwitchValue());
+        SmartDashboard.putString("Time", getTime());
+        SmartDashboard.putNumber("Voltage", ds.getBatteryVoltage());
+        
+        if(ds.getBatteryVoltage() < 9) { //Emergency voltage cutoff
+            compressor.stop();
+        }
+    }
+    
+    public String getTime() {
+        double time = ds.getMatchTime();
+        double hours = Math.floor(time/60);
+        double minutes = Math.floor(time - hours*60);
+        
+        String finalTime = hours + ":" + (minutes < 10 ? "0" : "") + minutes;
+        
+        return finalTime;
     }
     
     /**
