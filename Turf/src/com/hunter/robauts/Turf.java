@@ -31,15 +31,13 @@ public class Turf extends IterativeRobot {
     //control constants
     private final int LIFT_ARM = 3;
     private final int DROP_ARM = 2;
-    private final int[] KICK_OVERRIDE = {4, 5};
-    private final int[] KICK_NORMAL = {8, 12};
     private final int ARM_PRECISION_MODE = 2;
     
     private final int ARM_LIMIT_SWITCH = 2;
     
     private double ARM_SPEED = 0.50;
-    private final double ARM_MOD = 0.50; //Mode 2 for the arm (left trigger down) is ARM_SPEED * ARM_MOD
-    private double SHOOTER_SPEED = 0.1;
+    private final double ARM_MOD = 0.80; //Mode 2 for the arm (left trigger down) is ARM_SPEED * ARM_MOD
+    private double SHOOTER_SPEED = 0.5;
     
     private RobotDrive baseDrive;
     private Victor shooterVictor;
@@ -100,7 +98,9 @@ public class Turf extends IterativeRobot {
         
     }
 
-    
+    public double getKickSpeed() {
+        return -1 * SHOOTER_SPEED * (((-1 * joystickAlt.getAxis(Joystick.AxisType.kThrottle))+1)/2);
+    }
     
     /**
      * This function is called periodically during autonomous
@@ -119,6 +119,8 @@ public class Turf extends IterativeRobot {
      */
     public void teleopInit() {
         compressor.start();
+        
+        openArm(true);
     }
     public void teleopPeriodic() {
         getWatchdog().feed();
@@ -127,13 +129,15 @@ public class Turf extends IterativeRobot {
         
         cameraLight.set(Relay.Value.kForward);
         
-        SmartDashboard.putNumber("Kick_Power", (SHOOTER_SPEED * joystickAlt.getAxis(Joystick.AxisType.kThrottle)));
+        SmartDashboard.putNumber("Kick_Power", (getKickSpeed()));
         dispMessage(4, 1, "Kick ");
-        dispMessage(5, 3, "Kick Speed: " + (SHOOTER_SPEED * joystickAlt.getAxis(Joystick.AxisType.kThrottle)));
+        dispMessage(5, 3, "Kick Speed: " + (getKickSpeed()));
         
         SHOOTER_SPEED = SmartDashboard.getNumber("Maximum_Shoot");
         ARM_SPEED = SmartDashboard.getNumber("Maximum_Arm_Speed");
         
+        SmartDashboard.putBoolean("Limit_Switch", armSwitch.get());
+        SmartDashboard.putBoolean("Pressure_Switch_Tripped", compressor.getPressureSwitchValue());
     }
     
     /**
@@ -151,6 +155,9 @@ public class Turf extends IterativeRobot {
         dispMessage(1, 1, "Movement ");
         dispMessage(3, 3, "Right Stick: " + Double.toString(joystickRight.getY()));
         dispMessage(2, 3, "Left Stick: " + Double.toString(joystickLeft.getY()));
+        
+        //Hat switch micro control
+        
     }
     
     private void grabInput() {
@@ -163,17 +170,19 @@ public class Turf extends IterativeRobot {
         //Drive the shooter
         if(joystickRight.getRawButton(LIFT_ARM) && !joystickRight.getRawButton(DROP_ARM)) {
             //Slow forward drive for the kicker
-            shooterVictor.set(0.10);
+            shooterVictor.set(0.25);
         } else if(joystickRight.getRawButton(DROP_ARM) && !joystickRight.getRawButton(LIFT_ARM)) {
             //Slow back drive for the kicker
-            shooterVictor.set(-0.10);
-        } else if(isPressed(joystickAlt, KICK_OVERRIDE) || (joystickLeft.getRawButton(KICK_NORMAL[0]) && joystickRight.getRawButton(KICK_NORMAL[1]))) { //Reg kick
+            shooterVictor.set(-0.25);
+        } else if((joystickAlt.getRawButton(8) && joystickAlt.getRawButton(12)) || (joystickLeft.getRawButton(4) && joystickRight.getRawButton(5))) { //Reg kick
             //Full shoot for the kicker
-            shooterVictor.set(SHOOTER_SPEED * joystickAlt.getAxis(Joystick.AxisType.kThrottle));
+            shooterVictor.set(getKickSpeed());
         } else {
             //Stop shooter if nothing is being pressed
             shooterVictor.set(0);
         }
+        
+        SmartDashboard.putNumber("KICKER_CURRENT", shooterVictor.get());
     }
     private void armControl() {
         //Drive the arm (OLD LEFT JOYSTICK CONTROLS)
@@ -187,26 +196,16 @@ public class Turf extends IterativeRobot {
         
         
         //Drive the arm (NEW ALT JOYSTICK CONTROLS)
-        double armY = -joystickAlt.getAxis(Joystick.AxisType.kY);
+        double armY = joystickAlt.getAxis(Joystick.AxisType.kY);
+        SmartDashboard.putNumber("ARM_Y", armY);
         if((armY > 0 && canLift()) || armY < 0) {
-            armVictor.set((ARM_SPEED * (joystickAlt.getRawButton(ARM_PRECISION_MODE) ? ARM_MOD : 1)));
+            armVictor.set((ARM_SPEED * (joystickAlt.getRawButton(ARM_PRECISION_MODE) ? ARM_MOD : 1) * armY));
         } else {
             armVictor.set(0);
         }
         
         //Drive the gripper
         openArm(!joystickAlt.getButton(Joystick.ButtonType.kTrigger));
-    }
-    
-    //Returns true when every item in an int array is pressed (for multi-button controls)
-    private boolean isPressed(Joystick js, int[] input) {
-        for(int i = 0; i < input.length; i++) {
-            if(!js.getRawButton(input[i])) {
-                return false;
-            }
-        }
-        
-        return true;
     }
     
     //Determines whether or not we can continue to lift the arm further
