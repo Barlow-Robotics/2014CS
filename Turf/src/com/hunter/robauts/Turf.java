@@ -37,10 +37,9 @@ public class Turf extends IterativeRobot {
     
     private final int ARM_LIMIT_SWITCH = 2;
     
-    private final double ARM_SPEED = 0.50;
+    private double ARM_SPEED = 0.50;
     private final double ARM_MOD = 0.50; //Mode 2 for the arm (left trigger down) is ARM_SPEED * ARM_MOD
-    private final double SHOOTER_SPEED = 0.1;
-    private final double DEBOUNCE_TIME = 0.004;
+    private double SHOOTER_SPEED = 0.1;
     
     private RobotDrive baseDrive;
     private Victor shooterVictor;
@@ -90,12 +89,14 @@ public class Turf extends IterativeRobot {
         
         
         
-        cameraLight = new Relay(1);
+        cameraLight = new Relay(2);
         camera = new Camera();
         timer = new Timer();
         
-        compressorSwitch = new DigitalInput(1);
         armSwitch = new DigitalInput(2);
+        
+        SmartDashboard.putNumber("Maximum_Shoot", SHOOTER_SPEED);
+        SmartDashboard.putNumber("Maximum_Arm_Speed", ARM_SPEED);
         
     }
 
@@ -106,6 +107,8 @@ public class Turf extends IterativeRobot {
      */
     public void autonomousInit() {
         compressor.start();
+        
+        openArm(false);
     }
     public void autonomousPeriodic() {
         camera.autonomous();
@@ -123,9 +126,14 @@ public class Turf extends IterativeRobot {
         driveMotors();
         
         cameraLight.set(Relay.Value.kForward);
-        //getWatchdog().feed();
         
-        //SmartDashboard.putString("TEST", camera.hotOrNot() ? "HOT": "NOT HOT");
+        SmartDashboard.putNumber("Kick_Power", (SHOOTER_SPEED * joystickAlt.getAxis(Joystick.AxisType.kThrottle)));
+        dispMessage(4, 1, "Kick ");
+        dispMessage(5, 3, "Kick Speed: " + (SHOOTER_SPEED * joystickAlt.getAxis(Joystick.AxisType.kThrottle)));
+        
+        SHOOTER_SPEED = SmartDashboard.getNumber("Maximum_Shoot");
+        ARM_SPEED = SmartDashboard.getNumber("Maximum_Arm_Speed");
+        
     }
     
     /**
@@ -140,8 +148,9 @@ public class Turf extends IterativeRobot {
     private void driveMotors() {
         getWatchdog().feed();
         baseDrive.tankDrive(joystickRight, joystickRight.getAxisChannel(Joystick.AxisType.kY), joystickLeft, joystickLeft.getAxisChannel(Joystick.AxisType.kY));
-        dispMessage(2, 1, "Right Stick: " + Double.toString(joystickRight.getY()));
-        dispMessage(1, 1, "Left Stick: " + Double.toString(joystickLeft.getY()));
+        dispMessage(1, 1, "Movement ");
+        dispMessage(3, 3, "Right Stick: " + Double.toString(joystickRight.getY()));
+        dispMessage(2, 3, "Left Stick: " + Double.toString(joystickLeft.getY()));
     }
     
     private void grabInput() {
@@ -154,13 +163,13 @@ public class Turf extends IterativeRobot {
         //Drive the shooter
         if(joystickRight.getRawButton(LIFT_ARM) && !joystickRight.getRawButton(DROP_ARM)) {
             //Slow forward drive for the kicker
-            armVictor.set(0.10);
+            shooterVictor.set(0.10);
         } else if(joystickRight.getRawButton(DROP_ARM) && !joystickRight.getRawButton(LIFT_ARM)) {
             //Slow back drive for the kicker
-            armVictor.set(-0.10);
+            shooterVictor.set(-0.10);
         } else if(isPressed(joystickAlt, KICK_OVERRIDE) || (joystickLeft.getRawButton(KICK_NORMAL[0]) && joystickRight.getRawButton(KICK_NORMAL[1]))) { //Reg kick
             //Full shoot for the kicker
-            armVictor.set(SHOOTER_SPEED);
+            shooterVictor.set(SHOOTER_SPEED * joystickAlt.getAxis(Joystick.AxisType.kThrottle));
         } else {
             //Stop shooter if nothing is being pressed
             shooterVictor.set(0);
@@ -186,20 +195,9 @@ public class Turf extends IterativeRobot {
         }
         
         //Drive the gripper
-        if(joystickAlt.getButton(Joystick.ButtonType.kTrigger)) {
-            //Close solenoid opens
-            closeSolenoid.set(true);
-            openSolenoid.set(false);
-        } else {
-            //Open solenoid closes 
-            closeSolenoid.set(false);
-            openSolenoid.set(true);
-        }
-        
+        openArm(!joystickAlt.getButton(Joystick.ButtonType.kTrigger));
     }
-    private void armsInterrupt(){ //Sets victors to go downwards after microwsitch activated
-        armVictor.set(-0.1);
-    }
+    
     //Returns true when every item in an int array is pressed (for multi-button controls)
     private boolean isPressed(Joystick js, int[] input) {
         for(int i = 0; i < input.length; i++) {
@@ -226,6 +224,11 @@ public class Turf extends IterativeRobot {
             liftInterrupt = true;
         }*/
         return can;
+    }
+    
+    private void openArm(boolean open) {
+        closeSolenoid.set(!open);
+        openSolenoid.set(open);
     }
     
     private void dispMessage(int lineNumber, int startingCollumn, String message) {
