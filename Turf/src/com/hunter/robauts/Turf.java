@@ -189,7 +189,7 @@ public class Turf extends IterativeRobot {
         if((joystickRight.getRawButton(LIFT_ARM) && !joystickRight.getRawButton(DROP_ARM)) || joystickAlt.getRawButton(10)) {
             //Slow forward drive for the kicker
             shooterVictor.set(-0.5);
-        } else if(joystickRight.getRawButton(DROP_ARM) && !joystickRight.getRawButton(LIFT_ARM)) {
+        } else if((joystickRight.getRawButton(DROP_ARM) && !joystickRight.getRawButton(LIFT_ARM)) || joystickAlt.getRawButton(10)) {
             //Slow back drive for the kicker
             shooterVictor.set(0.5);
         } else if((joystickAlt.getRawButton(8) && joystickAlt.getRawButton(12)) || (joystickLeft.getRawButton(4) && joystickRight.getRawButton(5))) { //Reg kick
