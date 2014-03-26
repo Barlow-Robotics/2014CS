@@ -56,6 +56,8 @@ public class Turf extends IterativeRobot {
     
     private Solenoid openSolenoid;
     private Solenoid closeSolenoid;
+    private Solenoid openPeachSolenoid;
+    private Solenoid closePeachSolenoid;
     private Compressor compressor;
     
     private DriverStation ds;
@@ -83,6 +85,9 @@ public class Turf extends IterativeRobot {
         
         openSolenoid = new Solenoid(1);
         closeSolenoid = new Solenoid(2);
+        openPeachSolenoid = new Solenoid(3);
+        closePeachSolenoid = new Solenoid(4);
+        
         compressor = new Compressor(14,1);
         
         joystickLeft = new Joystick(1);
@@ -206,6 +211,8 @@ public class Turf extends IterativeRobot {
             //shooterVictor.set(0);
         }
         
+        shoot(joystickAlt.getRawButton(3) || joystickRight.getButton(Joystick.ButtonType.kTrigger));
+        
         //SmartDashboard.putNumber("KICKER_CURRENT", shooterVictor.get());
     }
     private void armControl() {
@@ -252,6 +259,11 @@ public class Turf extends IterativeRobot {
     private void openArm(boolean open) {
         closeSolenoid.set(!open);
         openSolenoid.set(open);
+    }
+    
+    private void shoot(boolean open) {
+    	closePeachSolenoid.set(!open);
+    	openPeachSolenoid.set(open);
     }
     
     private void dispMessage(int lineNumber, int startingCollumn, String message) {
