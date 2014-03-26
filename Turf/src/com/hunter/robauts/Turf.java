@@ -228,8 +228,10 @@ public class Turf extends IterativeRobot {
         
         //Drive the arm (NEW ALT JOYSTICK CONTROLS)
         double armY = joystickAlt.getAxis(Joystick.AxisType.kY);
+        
         SmartDashboard.putNumber("ARM_Y", armY);
-        if((armY > 0 && canLift()) || armY < 0) {
+        
+        if((armY > 0.1 && canLift()) || armY < -0.1) {
             armVictor.set((ARM_SPEED * (joystickAlt.getRawButton(ARM_PRECISION_MODE) ? ARM_MOD : 1) * armY));
         } else {
             armVictor.set(0);
