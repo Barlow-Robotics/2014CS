@@ -67,17 +67,18 @@ public class Turf extends IterativeRobot {
      * used for any initialization code.
      */
     public void robotInit() {
-        getWatchdog().setEnabled(true);
+        getWatchdog().setEnabled(false);
         getWatchdog().setExpiration(100); //Watchdog will function for 100 milliseconds between feeds
-        
         baseDrive = new RobotDrive(
                 new Victor(1), //front left motor
-                new Victor(2)  //rear left motor
+                new Victor(8), //rear left
+                new Victor(2),  //front right
+                new Victor(9) // rear right
                 );
-        //baseDrive.setExpiration(0.100); // Set the safety expiration to 100 milliseconds
+                //baseDrive.setExpiration(0.100); // Set the safety expiration to 100 milliseconds
         baseDrive.setSafetyEnabled(false);
 
-        shooterVictor = new Victor(4);
+        shooterVictor = new Victor(6);
         armVictor = new Victor(3);
         
         openSolenoid = new Solenoid(1);
@@ -110,11 +111,14 @@ public class Turf extends IterativeRobot {
      */
     public void autonomousInit() {
         compressor.start();
-        
         openArm(false);
+        moveDistance(2.0); 
+        
     }
     public void autonomousPeriodic() {
-        camera.autonomous();
+        
+        //camera.autonomous();
+        
     }
 
     /**
@@ -144,9 +148,10 @@ public class Turf extends IterativeRobot {
         SmartDashboard.putString("Time", getTime());
         SmartDashboard.putNumber("Voltage", ds.getBatteryVoltage());
         
-        if(ds.getBatteryVoltage() < 9) { //Emergency voltage cutoff
+       /*if(ds.getBatteryVoltage() < 9) { //Emergency voltage cutoff
             compressor.stop();
         }
+        * */
     }
     
     public String getTime() {
@@ -170,7 +175,8 @@ public class Turf extends IterativeRobot {
     
     private void driveMotors() {
         getWatchdog().feed();
-        baseDrive.tankDrive(joystickRight, joystickRight.getAxisChannel(Joystick.AxisType.kY), joystickLeft, joystickLeft.getAxisChannel(Joystick.AxisType.kY));
+        //baseDrive.tankDrive(joystickLeft, (-1)*joystickLeft.getAxisChannel(Joystick.AxisType.kY), joystickRight, (-1)*joystickRight.getAxisChannel(Joystick.AxisType.kY));
+        baseDrive.tankDrive(joystickLeft.getY()*(-1), joystickRight.getY() *(-1));
         dispMessage(1, 1, "Movement ");
         dispMessage(3, 3, "Right Stick: " + Double.toString(joystickRight.getY()));
         dispMessage(2, 3, "Left Stick: " + Double.toString(joystickLeft.getY()));
@@ -188,19 +194,19 @@ public class Turf extends IterativeRobot {
         //Drive the shooter
         if((joystickRight.getRawButton(LIFT_ARM) && !joystickRight.getRawButton(DROP_ARM)) || joystickAlt.getRawButton(10)) {
             //Slow forward drive for the kicker
-            shooterVictor.set(-0.5);
+            //shooterVictor.set(-0.5);
         } else if((joystickRight.getRawButton(DROP_ARM) && !joystickRight.getRawButton(LIFT_ARM)) || joystickAlt.getRawButton(10)) {
             //Slow back drive for the kicker
-            shooterVictor.set(0.5);
+            //shooterVictor.set(0.5);
         } else if((joystickAlt.getRawButton(8) && joystickAlt.getRawButton(12)) || (joystickLeft.getRawButton(4) && joystickRight.getRawButton(5))) { //Reg kick
             //Full shoot for the kicker
-            shooterVictor.set(getKickSpeed());
+            //shooterVictor.set(getKickSpeed());
         } else {
             //Stop shooter if nothing is being pressed
-            shooterVictor.set(0);
+            //shooterVictor.set(0);
         }
         
-        SmartDashboard.putNumber("KICKER_CURRENT", shooterVictor.get());
+        //SmartDashboard.putNumber("KICKER_CURRENT", shooterVictor.get());
     }
     private void armControl() {
         //Drive the arm (OLD LEFT JOYSTICK CONTROLS)
@@ -283,6 +289,20 @@ public class Turf extends IterativeRobot {
     
     public void disabledInit() {
         
+    }
+    private void moveDistance(double time) {
+        //Distance must be in feet
+        //feed watchdog
+        //feed motor
+        //add to the distance
+        double timeTravelled = 0.0;
+        while (timeTravelled < time) {
+            getWatchdog().feed();
+            baseDrive.drive(1.0, 0.0);
+            Timer.delay(.05);
+            timeTravelled += .05;
+        }
+        baseDrive.stopMotor();
     }
     
 }
