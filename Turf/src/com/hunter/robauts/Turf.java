@@ -62,6 +62,7 @@ public class Turf extends IterativeRobot {
     
     private DriverStation ds;
     
+    private boolean forceArmOpen = false;
     private boolean liftInterrupt = false; //If the lift has been interrupted by the limit switch
     private Timer timer;
     /**
@@ -97,6 +98,7 @@ public class Turf extends IterativeRobot {
         cameraLight = new Relay(2);
         camera = new Camera();
         timer = new Timer();
+        
         
         armSwitch = new DigitalInput(2);
         
@@ -191,6 +193,7 @@ public class Turf extends IterativeRobot {
     
     private void grabInput() {
         getWatchdog().feed();
+        
         shooterControl();
         armControl();
     }
@@ -238,7 +241,11 @@ public class Turf extends IterativeRobot {
         }
         
         //Drive the gripper
-        openArm(!joystickAlt.getButton(Joystick.ButtonType.kTrigger));
+        if(forceArmOpen) {
+            openArm(false);
+        } else {
+            openArm(!joystickAlt.getButton(Joystick.ButtonType.kTrigger));
+        }
     }
     
     //Determines whether or not we can continue to lift the arm further
@@ -264,6 +271,14 @@ public class Turf extends IterativeRobot {
     }
     
     private void shoot(boolean open) {
+        if(open) {
+            forceArmOpen = true;
+            if(!closePeachSolenoid.get()) {
+                Timer.delay(0.025);
+            }
+        } else {
+            forceArmOpen = false;
+        } 
     	closePeachSolenoid.set(!open);
     	openPeachSolenoid.set(open);
     }
