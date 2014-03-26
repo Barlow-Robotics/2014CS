@@ -213,8 +213,18 @@ public class Turf extends IterativeRobot {
             //Stop shooter if nothing is being pressed
             //shooterVictor.set(0);
         }
+        if (joystickAlt.getRawButton(3) || joystickRight.getButton(Joystick.ButtonType.kTrigger)){
+            
+            closePeachSolenoid.set(false);
+            openPeachSolenoid.set(true);
+        }else if (joystickAlt.getRawButton(4)){
+            shoot(joystickAlt.getRawButton(4));
+        }else{
+            closePeachSolenoid.set(true);
+            openPeachSolenoid.set(false);
+            forceArmOpen = false;
+        }
         
-        shoot(joystickAlt.getRawButton(3) || joystickRight.getButton(Joystick.ButtonType.kTrigger));
         
         //SmartDashboard.putNumber("KICKER_CURRENT", shooterVictor.get());
     }
@@ -234,7 +244,7 @@ public class Turf extends IterativeRobot {
         
         SmartDashboard.putNumber("ARM_Y", armY);
         
-        if((armY > 0.1 && canLift()) || armY < -0.1) {
+        if(armY > 0.1 || armY < -0.1) {
             armVictor.set((ARM_SPEED * (joystickAlt.getRawButton(ARM_PRECISION_MODE) ? ARM_MOD : 1) * armY));
         } else {
             armVictor.set(0);
@@ -250,7 +260,8 @@ public class Turf extends IterativeRobot {
     
     //Determines whether or not we can continue to lift the arm further
     private boolean canLift() {
-        boolean can = !armSwitch.get();
+        return true; //always return true
+        //boolean can = !armSwitch.get();
         
         //Flyback
         /*if(can) {
@@ -262,7 +273,7 @@ public class Turf extends IterativeRobot {
             }
             liftInterrupt = true;
         }*/
-        return can;
+        //return can;
     }
     
     private void openArm(boolean open) {
