@@ -1,2 +1,2 @@
-Hunter lightman is the least cool guy on the robotics team.
+Michael Lin is the coolest guy on the robotics team.
 ======
