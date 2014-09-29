@@ -1,2 +1,2 @@
-Michael Lin is the coolest guy on the robotics team.
+Face it guys, none of us are cool…
 ======
