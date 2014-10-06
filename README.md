@@ -1,2 +1,2 @@
-Face it guys, none of us are cool… Except for Hunter. He's sooper cool.
+We've had some database issues. Hunter isn't sooper cool, but the team is. B)
 ======
