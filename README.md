@@ -1,2 +1,2 @@
-Face it guys, none of us are cool… Except for Hunter. He's sooper cool.
+Barlow Robotics 2014 Control System
 ======
